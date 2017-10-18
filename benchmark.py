@@ -45,7 +45,6 @@ def gridSearch_nn(X, y):
 
     return clf, gs.best_score_, gs
 
-
 if __name__ == '__main__':
     all_data = utility.get_all_data()
     train, target = utility.process_data(all_data)
@@ -58,4 +57,5 @@ if __name__ == '__main__':
     clf, score, gs = gridSearch_nn(train, target)
     tmp = pd.DataFrame(gs.cv_results_)
     tmp.to_csv('BloodDonation NN.csv')
+
 
