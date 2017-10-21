@@ -5,7 +5,6 @@ Created on Thu Mar 16 10:38:28 2017
 @author: jtay
 """
 
-#%% Imports
 import pandas as pd
 import numpy as np
 from sklearn.manifold import TSNE
@@ -13,7 +12,7 @@ from time import clock
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.cluster import KMeans
-from sklearn.mixture import GaussianMixture as GMM
+from sklearn.mixture import GaussianMixture as GM
 from collections import defaultdict
 from helpers import cluster_acc, myGMM,nn_arch,nn_reg
 from sklearn.metrics import adjusted_mutual_info_score as ami
@@ -72,25 +71,26 @@ def evaluate_kmeans(X, y, problem):
     acc = defaultdict(lambda: defaultdict(dict))
     adjMI = defaultdict(lambda: defaultdict(dict))
     km = KMeans(random_state=5)
-    gmm = GMM(random_state=5)
+    gm = GM(random_state=5)
 
     st = clock()
     clusters = [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
     for k in clusters:
+        print('now doing k=' + str(k))
         km.set_params(n_clusters=k)
-        # gmm.set_params(n_components=k)
+        gm.set_params(n_components=k)
         km.fit(X)
-        # gmm.fit(madelonX)
+        gm.fit(X)
         SSE[k][problem] = km.score(X)
-        #ll[k][problem] = gmm.score(X)
+        ll[k][problem] = gm.score(X)
+        print('km score:', SSE[k][problem])
+        print('gm score:', ll[k][problem])
         acc[k][problem]['Kmeans'] = cluster_acc(y, km.predict(X))
-        # acc[k]['Madelon']['GMM'] = cluster_acc(madelonY,gmm.predict(madelonX))
+        acc[k][problem]['GM'] = cluster_acc(y,gm.predict(X))
         adjMI[k][problem]['Kmeans'] = ami(y, km.predict(X))
-        # adjMI[k]['Madelon']['GMM'] = ami(madelonY,gmm.predict(madelonX))
+        adjMI[k]['Madelon']['GMM'] = ami(y,gm.predict(X))
 
     print(k, clock() - st)
-
-    return SSE, ll, acc, adjMI
 
     SSE = (-pd.DataFrame(SSE)).T
     SSE.rename(columns=lambda x: x + ' SSE (left)', inplace=True)
@@ -99,12 +99,14 @@ def evaluate_kmeans(X, y, problem):
     acc = pd.Panel(acc)
     adjMI = pd.Panel(adjMI)
 
-    SSE.to_csv(out + 'SSE.csv')
-    ll.to_csv(out + 'logliklihood.csv')
-    acc.ix[:, :, 'Digits'].to_csv(out + 'Digits acc.csv')
-    acc.ix[:, :, 'Madelon'].to_csv(out + 'Madelon acc.csv')
-    adjMI.ix[:, :, 'Digits'].to_csv(out + 'Digits adjMI.csv')
-    adjMI.ix[:, :, 'Madelon'].to_csv(out + 'Madelon adjMI.csv')
+    SSE.to_csv(problem+ ' SSE.csv')
+    ll.to_csv(problem+ ' logliklihood.csv')
+    acc.ix[:,:,problem].to_csv(problem+' acc.csv')
+    acc.ix[:,:,problem,].to_csv(problem + ' acc.csv')
+    adjMI.ix[:,:,problem] .to_csv(problem+' adjMI.csv')
+    adjMI.ix[:,:,problem].to_csv(problem + ' adjMI.csv')
+
+    return SSE, ll, acc, adjMI
 
 
 
@@ -112,34 +114,14 @@ if __name__ == '__main__':
     all_data = utility.get_all_data()
     train, target = utility.process_data(all_data)
     SSE, ll, acc, adjMI = evaluate_kmeans(train, target, 'FreddieMac')
-    SSE = (-pd.DataFrame(SSE)).T
-    SSE.rename(columns=lambda x: x + ' SSE (left)', inplace=True)
-    ll = pd.DataFrame(ll).T
-    ll.rename(columns=lambda x: x + ' log-likelihood', inplace=True)
-    acc = pd.Panel(acc)
-    adjMI = pd.Panel(adjMI)
-    SSE.to_csv(out + 'SSE.csv')
-    ll.to_csv(out + 'logliklihood.csv')
-    acc.iloc[:, :, 'FreddieMac'].to_csv(out + 'FreddieMac acc.csv')
-    adjMI.iloc[:, :, 'FreddieMac'].to_csv(out + 'FreddieMac adjMI.csv')
-    clf, score, gs = gridSearch_nn(train, target)
-    tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv('FreddieMac NN.csv')
+    #clf, score, gs = gridSearch_nn(train, target)
+    #tmp = pd.DataFrame(gs.cv_results_)
+    #tmp.to_csv('FreddieMac NN.csv')
 
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
     SSE, ll, acc, adjMI = evaluate_kmeans(train, target, 'BloodDonation')
-    SSE = (-pd.DataFrame(SSE)).T
-    SSE.rename(columns=lambda x: x + ' SSE (left)', inplace=True)
-    ll = pd.DataFrame(ll).T
-    ll.rename(columns=lambda x: x + ' log-likelihood', inplace=True)
-    acc = pd.Panel(acc)
-    adjMI = pd.Panel(adjMI)
-    SSE.to_csv(out + 'SSE.csv')
-    ll.to_csv(out + 'logliklihood.csv')
-    acc.iloc[:, :, 'FreddieMac'].to_csv(out + 'FreddieMac acc.csv')
-    adjMI.iloc[:, :, 'FreddieMac'].to_csv(out + 'FreddieMac adjMI.csv')
-    clf, score, gs = gridSearch_nn(train, target)
-    tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv('BloodDonation NN.csv')
+    #clf, score, gs = gridSearch_nn(train, target)
+    #tmp = pd.DataFrame(gs.cv_results_)
+    #tmp.to_csv('BloodDonation NN.csv')
