@@ -102,7 +102,7 @@ def evaluate_kmeans(X, y, problem):
 
 
 
-def clustering():
+def clustering(X, y):
     mlp = MLPClassifier(solver='adam', alpha=1e-5, shuffle=True, early_stopping=True, activation='relu',
                         verbose=True)
     parameters = {
