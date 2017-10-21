@@ -79,8 +79,8 @@ def evaluate_kmeans(X, y, problem):
         print('gm score:', ll[k][problem])
         acc[k][problem]['Kmeans'] = cluster_acc(y, km.predict(X))
         acc[k][problem]['GM'] = cluster_acc(y,gm.predict(X))
-        adjMI[k][problem]['Kmeans'] = metrics.ami(y, km.predict(X))
-        adjMI[k][problem]['GM'] = metrics.ami(y,gm.predict(X))
+        adjMI[k][problem]['Kmeans'] = metrics.adjusted_mutual_info_score(y, km.predict(X))
+        adjMI[k][problem]['GM'] = metrics.adjusted_mutual_info_score(y,gm.predict(X))
 
     print(k, clock() - st)
 
