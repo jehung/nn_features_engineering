@@ -40,7 +40,7 @@ def evaluate_kmeans(X, y, problem):
     gm = GM(random_state=5)
 
     st = clock()
-    clusters = [2, 3, 4, 5, 6]
+    clusters = [2, 3, 4]
     for k in clusters:
         print('now doing k=' + str(k))
         km.set_params(n_clusters=k)
@@ -74,9 +74,11 @@ def evaluate_kmeans(X, y, problem):
     adjMI.ix[:,:,problem] .to_csv(problem+' adjMI.csv')
     adjMI.ix[:,:,problem].to_csv(problem + ' adjMI.csv')
 
-    initial = [cluster.vq.kmeans(tests, k) for k in clusters]
-    pyplot.plot([var for (cent, var) in initial])
-    pyplot.show()
+    pl.plot(clusters, distort_km, 'bx-')
+    pl.xlabel('k')
+    pl.ylabel('Distortion')
+    pl.title('The Elbow Method showing the optimal k')
+    pl.show()
 
     return SSE, ll, acc, adjMI, km, gm
 
@@ -104,11 +106,11 @@ def visualize_clusters(data, target, problem):
     '''
     # now visualize classified data in new projected space
     pl.figure('Reference Plot ' + problem)
-    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'], label=target)
+    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'])
     kmeans = KMeans(n_clusters=2)
     kmeans.fit(data)
     pl.figure('K-means with 2 clusters ' + problem)
-    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'], label=kmeans.labels_)
+    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'])
     pl.legend()
     pl.show()
 
@@ -143,7 +145,7 @@ def clustering_nn(X, y):
 if __name__ == '__main__':
     all_data = utility.get_all_data()
     train, target = utility.process_data(all_data)
-    SSE, ll, acc, adjMI = evaluate_kmeans(train, target, 'FreddieMac')
+    SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'FreddieMac')
     visualize_clusters(train, target, 'FreddieMac')
     #clf, score, gs = clustering_nn(train, target)
     #tmp = pd.DataFrame(gs.cv_results_)
@@ -152,7 +154,7 @@ if __name__ == '__main__':
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
-    SSE, ll, acc, adjMI = evaluate_kmeans(train, target, 'BloodDonation')
+    SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'BloodDonation')
     visualize_clusters(train, target, 'Blood Donation')
     #clf, score, gs = clustering_nn(train, target)
     #tmp = pd.DataFrame(gs.cv_results_)
