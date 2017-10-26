@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 20 17:17:14 2017
-
-@author: JTay
-"""
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 import utility
