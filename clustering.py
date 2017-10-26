@@ -24,12 +24,14 @@ import sys
 import utility
 import pylab as pl
 from scipy.spatial.distance import cdist
+from imblearn.over_sampling import SMOTE
 
 
 
 
 
 def evaluate_kmeans(X, y, problem):
+    """Also evaluate kmeans and em both"""
     SSE = defaultdict(dict)
     ll = defaultdict(dict)
     distort_km = []
@@ -106,11 +108,11 @@ def visualize_clusters(data, target, problem):
     '''
     # now visualize classified data in new projected space
     pl.figure('Reference Plot ' + problem)
-    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'])
+    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['navy', 'darkorange'])
     kmeans = KMeans(n_clusters=2)
     kmeans.fit(data)
     pl.figure('K-means with 2 clusters ' + problem)
-    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['g', 'r'])
+    pl.scatter(pca_2d[:, 0], pca_2d[:, 1], c=['navy', 'darkorange'])
     pl.legend()
     pl.show()
 
@@ -118,25 +120,26 @@ def visualize_clusters(data, target, problem):
 def clustering_nn(X, y):
     mlp = MLPClassifier(solver='adam', alpha=1e-5, shuffle=True, early_stopping=True, activation='relu',
                         verbose=True)
+    sm = SMOTE
+    X_res, y_res = sm.fit_sample(X, y)
     parameters = {
-        'NN__hidden_layer_sizes': [(111,), (111, 111, 111), (111, 111, 111, 111, 111),
-                                   (111, 111, 111, 111, 111, 111, 111),
-                                   (111,), (111, 100, 100), (111, 100, 100, 100, 100),
-                                   (111, 100, 100, 100, 100, 100, 100),
-                                   (111,), (111, 89, 89), (111, 89, 89, 89, 89), (111, 89, 89, 89, 89, 89, 89),
-                                   (111,), (111, 78, 78), (111, 78, 78, 78, 78), (111, 78, 78, 78, 78, 78, 78)],
-        'KM__n_clusters': [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]}
+        'NN__hidden_layer_sizes': [(n,), (n, n, n), (n, n, n, n, n),(n,n, n, n, n, n, n),
+                                   (n,), (n, int(0.9*n),int(0.9*n)), (n, int(0.9*n),int(0.9*n),int(0.9*n),int(0.9*n)),
+                                   (n, int(0.9*n),int(0.9*n),int(0.9*n),int(0.9*n),int(0.9*n),int(0.9*n)),
+                                   (n,), (n, int(0.8 *n), int(0.8 * n)), (n, int(0.8 *n), int(0.8 * n), int(0.8 * n), int(0.8 * n)),
+                                   (n, int(0.8 *n), int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n)),
+                                   (n,), (n, int(0.7 *n), int(0.7 * n)), (n, int(0.7 *n), int(0.7 * n), int(0.7 * n), int(0.7 * n)),
+                                   (n, int(0.7 *n), int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n)),],
+        'KM__n_clusters': [2, 3, 4, 5, 6]}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
     km = KMeans(random_state=5)
-    pipe = Pipeline([('KM', km), ('NN', mlp)])
+    pipe = Pipeline([('smote', sm), ('KM', km), ('NN', mlp)])
     gs = GridSearchCV(pipe, parameters, verbose=10)
-    gs.fit(X, y)
+    gs.fit(X_res, y_res)
     clf = gs.best_estimator_
     print(clf)
     print(gs.best_score_)
-    mat = clf.predict_proba(X)
-    print(mat)
 
     return clf, gs.best_score_, gs
 
