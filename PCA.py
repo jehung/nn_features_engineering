@@ -79,21 +79,20 @@ def pca_nn(X, y, problem):
     mlp = MLPClassifier(solver='adam', alpha=1e-5, shuffle=True, early_stopping=True, activation='relu',
                         verbose=True)
     X_res, y_res = sm.fit_sample(X, y)
+    if 'Freddie' in problem:
+        pca__n_components =[2, 3, 4, 5, 6, 7]
+    else:
+        pca__n_components= [2, 3]
+
     parameters = {
-        'NN__hidden_layer_sizes': [(n,), (n, n, n), (n, n, n, n, n), (n, n, n, n, n, n, n),
+        'NN__hidden_layer_sizes': [(n,), (n, n, n), (n, n, n, n, n),
                                    (n,), (n, int(0.9 * n), int(0.9 * n)),
                                    (n, int(0.9 * n), int(0.9 * n), int(0.9 * n), int(0.9 * n)),
-                                   (n, int(0.9 * n), int(0.9 * n), int(0.9 * n), int(0.9 * n), int(0.9 * n),
-                                    int(0.9 * n)),
                                    (n,), (n, int(0.8 * n), int(0.8 * n)),
                                    (n, int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n)),
-                                   (n, int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n),
-                                    int(0.8 * n)),
                                    (n,), (n, int(0.7 * n), int(0.7 * n)),
-                                   (n, int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n)),
-                                   (n, int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n),
-                                    int(0.7 * n)), ],
-        'pca__n_components': [2, 3, 4, 5, 6, 7, 8, 9]}
+                                   (n, int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n)) ],
+        'pca__n_components': pca__n_components}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
     pipe = Pipeline([('pca',pca),('NN',mlp)])
