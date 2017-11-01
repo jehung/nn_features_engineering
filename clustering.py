@@ -18,18 +18,19 @@ from sklearn.model_selection import GridSearchCV
 import sys
 import utility
 import pylab as pl
-from scipy.spatial.distance import cdist
 from imblearn.over_sampling import SMOTE
 from scipy.cluster.vq import kmeans,vq
+from scipy.spatial.distance import cdist,pdist
 
 
 
 
-out = './results/Clustering/'
 
-def evaluate_kmeans(X, y, problem):
-    '''
+def evaluate_kmeans(X, y, problem, out='./results/Clustering/'):
     """Also evaluate kmeans and em both"""
+    sm = SMOTE()
+    X_res, y_res = sm.fit_sample(X, y)
+
     SSE = defaultdict(dict)
     ll = defaultdict(dict)
     distort_km = []
@@ -40,24 +41,24 @@ def evaluate_kmeans(X, y, problem):
     gm = GM(random_state=5)
 
     st = clock()
-    clusters = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    clusters = [2, 3, 4, 5, 6]
     for k in clusters:
         print('now doing k=' + str(k))
         km.set_params(n_clusters=k)
         gm.set_params(n_components=k)
-        km.fit(X)
-        gm.fit(X)
+        km.fit(X_res)
+        gm.fit(X_res)
 
         #distort_km.append(sum(np.min(cdist(X, km.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
         ##distort_gm.append(sum(np.min(cdist(X, gm.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
-        SSE[k][problem] = km.score(X)
-        ll[k][problem] = gm.score(X)
+        SSE[k][problem] = km.score(X_res)
+        ll[k][problem] = gm.score(X_res)
         print('km score:', SSE[k][problem])
         print('gm score:', ll[k][problem])
-        acc[k][problem]['Kmeans'] = cluster_acc(y, km.predict(X))
-        acc[k][problem]['GM'] = cluster_acc(y,gm.predict(X))
-        adjMI[k][problem]['Kmeans'] = metrics.adjusted_mutual_info_score(y, km.predict(X))
-        adjMI[k][problem]['GM'] = metrics.adjusted_mutual_info_score(y,gm.predict(X))
+        acc[k][problem]['Kmeans'] = cluster_acc(y_res, km.predict(X_res))
+        acc[k][problem]['GM'] = cluster_acc(y_res,gm.predict(X_res))
+        adjMI[k][problem]['Kmeans'] = metrics.adjusted_mutual_info_score(y_res, km.predict(X_res))
+        adjMI[k][problem]['GM'] = metrics.adjusted_mutual_info_score(y_res,gm.predict(X_res))
 
     print(k, clock() - st)
 
@@ -74,19 +75,27 @@ def evaluate_kmeans(X, y, problem):
     acc.ix[:,:,problem,].to_csv(out+problem + ' acc.csv')
     adjMI.ix[:,:,problem] .to_csv(out+problem+' adjMI.csv')
     adjMI.ix[:,:,problem].to_csv(out+problem + ' adjMI.csv')
-    '''
+
+    return SSE, ll, acc, adjMI, km, gm
+
+
+
+def visualize_kmeans(X,y):
     ## evaluate using elbow method
-    K_MAX = 10
+    sm = SMOTE()
+    X_res, y_res = sm.fit_sample(X, y)
+
+    K_MAX = 6
     KK = range(1, K_MAX + 1)
 
-    KM = [kmeans(X, k) for k in KK]
+    KM = [kmeans(X_res, k) for k in KK]
     centroids = [cent for (cent, var) in KM]
-    D_k = [cdist(X, cent, 'euclidean') for cent in centroids]
+    D_k = [cdist(X_res, cent, 'euclidean') for cent in centroids]
     cIdx = [np.argmin(D, axis=1) for D in D_k]
     dist = [np.min(D, axis=1) for D in D_k]
 
     tot_withinss = [sum(d ** 2) for d in dist]  # Total within-cluster sum of squares
-    totss = sum(pdist(X) ** 2) / X.shape[0]  # The total sum of squares
+    totss = sum(pdist(X_res) ** 2) / X_res.shape[0]  # The total sum of squares
     betweenss = totss - tot_withinss  # The between-cluster sum of squares
 
     ##### plots #####
@@ -110,8 +119,6 @@ def evaluate_kmeans(X, y, problem):
     pl.ylabel('Distortion')
     pl.title('The Elbow Method showing the optimal k')
     pl.show()
-
-    #return SSE, ll, acc, adjMI, km, gm
 
 
 def visualize_clusters(data, target, problem, k):
@@ -199,8 +206,9 @@ def clustering_nn(X, y):
 if __name__ == '__main__':
     all_data = utility.get_all_data()
     train, target = utility.process_data(all_data)
-    SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'FreddieMac')
-    #visualize_clusters(train, target, 'FreddieMac', 6)
+    #SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'FreddieMac')
+    #visualize_kmeans(train, target) ##TODO: resolve code problem
+    visualize_clusters(train, target, 'FreddieMac', 3)
     #clf, score, gs = clustering_nn(train, target)
     #tmp = pd.DataFrame(gs.cv_results_)
     #tmp.to_csv('FreddieMac NN.csv')
@@ -208,8 +216,9 @@ if __name__ == '__main__':
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
-    SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'BloodDonation')
-    #visualize_clusters(train, target, 'Blood Donation', 3)
+    #SSE, ll, acc, adjMI, km, gm = evaluate_kmeans(train, target, 'BloodDonation')
+    #visualize_kmeans(train, target) ## TODO: resolve code problem
+    visualize_clusters(train, target, 'Blood Donation', 2)
     #clf, score, gs = clustering_nn(train, target)
     #tmp = pd.DataFrame(gs.cv_results_)
     #tmp.to_csv('BloodDonation NN.csv')
