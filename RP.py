@@ -19,7 +19,9 @@ import pylab as pl
 import clustering
 from sklearn.metrics.pairwise import pairwise_distances
 from time import time
-
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
+from sklearn.cluster import KMeans
 
 
 out = './results/RP/'
@@ -78,12 +80,12 @@ def rp_johnson(X, problem):
     pl.show()
     '''
 
-    X = X[:50000]
+    X = X[:5000]
     n_samples, n_features = X.shape
     print("Embedding %d samples with dim %d using various random projections"
           % (n_samples, n_features))
 
-    n_components_range = np.array([2, 5, 10, 20, 60])
+    n_components_range = np.array([2, 5, 10, 20, 60, 80, 100, 120])
     dists = euclidean_distances(X, squared=True).ravel()
 
     # select only non-identical samples pairs
@@ -134,30 +136,24 @@ def reduction_clustering(X, y, k, problem):
     #TODO: should we perform plotting?
 
 
-def pca_nn(X, y, problem):
+def rp_nn(X, y, problem):
     n = len(X[0])
     sm = SMOTE()
-    pca = PCA(random_state=5)
+    rp = SparseRandomProjection(random_state=5)
     mlp = MLPClassifier(solver='adam', alpha=1e-5, shuffle=True, early_stopping=True, activation='relu',
                         verbose=True)
     X_res, y_res = sm.fit_sample(X, y)
     if 'Freddie' in problem:
-        pca__n_components=[2,5,10,15,20]
+        rp__n_components=[2, 5, 10, 20, 60, 80, 100, 120]
     else:
-        pca__n_components=[2, 3]
+        rp__n_components=[2, 3]
 
     parameters = {
-        'NN__hidden_layer_sizes': [(n,), (n, n, n), (n, n, n, n, n),
-                                   (n,), (n, int(0.9 * n), int(0.9 * n)),
-                                   (n, int(0.9 * n), int(0.9 * n), int(0.9 * n), int(0.9 * n)),
-                                   (n,), (n, int(0.8 * n), int(0.8 * n)),
-                                   (n, int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n)),
-                                   (n,), (n, int(0.7 * n), int(0.7 * n)),
-                                   (n, int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n)) ],
-        'pca__n_components': pca__n_components}
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
+        'rp__n_components': rp__n_components}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
-    pipe = Pipeline([('pca',pca),('NN',mlp)])
+    pipe = Pipeline([('rp',rp),('NN',mlp)])
     gs = GridSearchCV(pipe,parameters,verbose=10,cv=sss)
 
     gs.fit(X_res, y_res)
@@ -174,24 +170,24 @@ def pca_nn(X, y, problem):
 def reduction_cluster_nn(X,y,problem):
     n = len(X[0])
     sm = SMOTE()
-    pca = PCA(random_state=5)
+    rp = SparseRandomProjection(random_state=5)
     km = KMeans(random_state=5)
     mlp = MLPClassifier(solver='adam', alpha=1e-5, shuffle=True, early_stopping=True, activation='relu',
                         verbose=True)
     X_res, y_res = sm.fit_sample(X, y)
     if 'Freddie' in problem:
-        pca__n_components = [2,5,10,15,20]
+        rp__n_components = [2, 5, 10, 20, 60, 80, 100, 120]
     else:
         pca__n_components = [2, 3]
 
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
-        'pca__n_components': pca__n_components,
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
+        'rp__n_components': [2, 5, 10, 20, 60, 80, 100, 120],
         'km__n_clusters': [2, 3, 4, 5, 6],
     }
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
-    pipe = Pipeline([('pca', pca), ('km', km), ('NN', mlp)])
+    pipe = Pipeline([('rp', rp), ('km', km), ('NN', mlp)])
     gs = GridSearchCV(pipe, parameters, verbose=10, cv=sss)
 
     gs.fit(X_res, y_res)
@@ -209,17 +205,17 @@ if __name__ == '__main__':
     all_data = utility.get_all_data()
     train, target = utility.process_data(all_data)
     #rp(train, 'Freddie Mac')
-    rp_johnson(train, 'Freddie Mac')
+    #rp_johnson(train, 'Freddie Mac')
     #visualize_rp(train, target, 'FreddieMac')
     #pca(train, 'FreddieMac')
     #reduction_clustering(train, target, 60, 'FreddiMac')
-    #clf, score, gs = pca_nn(train, target, 'FreddieMac')
+    #clf, score, gs = rp_nn(train, target, 'FreddieMac')
     #tmp = pd.DataFrame(gs.cv_results_)
     #tmp.to_csv('FreddieMac NN.csv')
     #visualize_data(5, train, target, 'FreddieMac')
-    #clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
-    #tmp = pd.DataFrame(gs.cv_results_)
-    #tmp.to_csv('FreddieMac dr_cluster_NN.csv')
+    clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
+    tmp = pd.DataFrame(gs.cv_results_)
+    tmp.to_csv('FreddieMac dr_cluster_NN.csv')
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
