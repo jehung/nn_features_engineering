@@ -85,13 +85,7 @@ def ica_nn(X, y, problem):
                         verbose=True)
     X_res, y_res = sm.fit_sample(X, y)
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n),
-                                   (n, int(0.9 * n), int(0.9 * n)),
-                                   (n, int(0.9 * n), int(0.9 * n), int(0.9 * n), int(0.9 * n)),
-                                   (n, int(0.8 * n), int(0.8 * n)),
-                                   (n, int(0.8 * n), int(0.8 * n), int(0.8 * n), int(0.8 * n)),
-                                   (n, int(0.7 * n), int(0.7 * n)),
-                                   (n, int(0.7 * n), int(0.7 * n), int(0.7 * n), int(0.7 * n))],
+        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
         'ica__n_components': [2, 5, 10, 15, 20]}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
@@ -148,23 +142,23 @@ if __name__ == '__main__':
     train, target = utility.process_data(all_data)
     #visualize_ica(train, target, 'FreddieMac')
     #ica(train, 'FreddieMac')
-    reduction_clustering(train, target, 20, 'FreddiMac')
-    #clf, score, gs = ica_nn(train, target, 'FreddieMac')
-    #tmp = pd.DataFrame(gs.cv_results_)
-    #tmp.to_csv('FreddieMac NN.csv')
-    #clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
-    #tmp = pd.DataFrame(gs.cv_results_)
-    #tmp.to_csv('FreddieMac dr_cluster_NN.csv')
+    #reduction_clustering(train, target, 20, 'FreddiMac')
+    clf, score, gs = ica_nn(train, target, 'FreddieMac')
+    tmp = pd.DataFrame(gs.cv_results_)
+    tmp.to_csv('FreddieMac ICA NN.csv')
+    clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
+    tmp = pd.DataFrame(gs.cv_results_)
+    tmp.to_csv('FreddieMac ICA_cluster_NN.csv')
 
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
     #visualize_ica(train, target, 'BloodDonation')
     #ica(train, 'BloodDonation')
-    reduction_clustering(train, target, 2, 'BloodDonation')
+    #reduction_clustering(train, target, 2, 'BloodDonation')
     #clf, score, gs = ica_nn(train, target, 'BloodDonation')
     #tmp = pd.DataFrame(gs.cv_results_)
     #tmp.to_csv('BloodDonation NN.csv')
     #clf, score, gs = reduction_cluster_nn(train, target, 'BloodDonation')
     #tmp = pd.DataFrame(gs.cv_results_)
-    #tmp.to_csv('FreddieMac dr_cluster_NN.csv')
+    #tmp.to_csv('FreddieMac ICA_cluster_NN.csv')
