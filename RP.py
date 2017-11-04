@@ -196,7 +196,7 @@ def reduction_cluster_nn(X,y,problem):
     print(gs.best_score_)
 
     tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv(out + problem + ' dim_red_nn.csv')
+    tmp.to_csv(out + problem + ' dr_cluster_nn.csv')
 
     return clf, gs.best_score_, gs
 
@@ -209,16 +209,14 @@ if __name__ == '__main__':
     #visualize_rp(train, target, 'FreddieMac')
     #pca(train, 'FreddieMac')
     #reduction_clustering(train, target, 60, 'FreddiMac')
-    #clf, score, gs = rp_nn(train, target, 'FreddieMac')
+    clf, score, gs = rp_nn(train, target, 'FreddieMac')
     #tmp = pd.DataFrame(gs.cv_results_)
     #tmp.to_csv('FreddieMac NN.csv')
     #visualize_data(5, train, target, 'FreddieMac')
     clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
-    tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv('FreddieMac dr_cluster_NN.csv')
 
-    all_data = utility.get_all_data_bloodDonation()
-    train, target = utility.process_data_bloodDonation(all_data)
+    #all_data = utility.get_all_data_bloodDonation()
+    #train, target = utility.process_data_bloodDonation(all_data)
     #rp(train, 'Blood Donation')
     #visualize_rp(train, target, 'BloodDonation')
     #pca(train, 'BloodDonation')

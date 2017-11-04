@@ -85,7 +85,7 @@ def ica_nn(X, y, problem):
                         verbose=True)
     X_res, y_res = sm.fit_sample(X, y)
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
         'ica__n_components': [2, 5, 10, 15, 20]}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
@@ -117,7 +117,7 @@ def reduction_cluster_nn(X,y,problem):
         ica__n_components = [2, 3]
 
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
         'ica__n_components': ica__n_components,
         'km__n_clusters': [2, 3, 4, 5, 6],
     }
@@ -132,7 +132,7 @@ def reduction_cluster_nn(X,y,problem):
     print(gs.best_score_)
 
     tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv(out + problem + ' dim_red_nn.csv')
+    tmp.to_csv(out + problem + ' dr_cluster_nn.csv')
 
     return clf, gs.best_score_, gs
 

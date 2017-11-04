@@ -94,7 +94,7 @@ def pca_nn(X, y, problem):
         pca__n_components=[2, 3]
 
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
         'pca__n_components': pca__n_components}
 
     sss = StratifiedShuffleSplit(n_splits=5, test_size=0.2)  ## no need for this given 50000 random sample
@@ -126,7 +126,7 @@ def reduction_cluster_nn(X,y,problem):
         pca__n_components = [2, 3]
 
     parameters = {
-        'NN__hidden_layer_sizes': [(n, n, n), (n, n, n, n, n)],
+        'NN__hidden_layer_sizes': [(n, n, n, n, n)],
         'pca__n_components': pca__n_components,
         'km__n_clusters': [2, 3, 4, 5, 6],
     }
@@ -141,7 +141,7 @@ def reduction_cluster_nn(X,y,problem):
     print(gs.best_score_)
 
     tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv(out + problem + ' dim_red_nn.csv')
+    tmp.to_csv(out + problem + ' dr_cluster_nn.csv')
 
     return clf, gs.best_score_, gs
 
@@ -157,8 +157,7 @@ if __name__ == '__main__':
     tmp.to_csv('FreddieMac PCA NN.csv')
     #visualize_data(5, train, target, 'FreddieMac')
     clf, score, gs = reduction_cluster_nn(train, target, 'FreddieMac')
-    tmp = pd.DataFrame(gs.cv_results_)
-    tmp.to_csv('FreddieMac dr_cluster_NN.csv')
+
 
     all_data = utility.get_all_data_bloodDonation()
     train, target = utility.process_data_bloodDonation(all_data)
